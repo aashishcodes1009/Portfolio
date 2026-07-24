@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Random Quote Generator</title>
+  <style>
+    /* Global Reset & Styling */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* Minimal Card UI */
+    .quote-card {
+      background: #ffffff;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      max-width: 550px;
+      width: 100%;
+      text-align: center;
+      transition: transform 0.2s ease, opacity 0.3s ease;
+    }
+
+    /* Quote Typography */
+    .quote-mark {
+      font-size: 3rem;
+      color: #6c5ce7;
+      line-height: 0;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .quote-text {
+      font-size: 1.35rem;
+      color: #2d3436;
+      line-height: 1.6;
+      font-weight: 500;
+      margin-bottom: 20px;
+      transition: opacity 0.2s ease;
+    }
+
+    .quote-author {
+      font-size: 1rem;
+      color: #636e72;
+      font-style: italic;
+      margin-bottom: 30px;
+      display: block;
+    }
+
+    .quote-author::before {
+      content: "— ";
+    }
+
+    /* Actions & Buttons */
+    .button-group {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    button {
+      border: none;
+      outline: none;
+      padding: 12px 24px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background-color: #6c5ce7;
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background-color: #5b4bc4;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background-color: #f1f2f6;
+      color: #2d3436;
+    }
+
+    .btn-secondary:hover {
+      background-color: #dfe4ea;
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    /* Utility Class for Smooth Fade Effect */
+    .fade-out {
+      opacity: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="quote-card">
+    <span class="quote-mark">“</span>
+    <p class="quote-text" id="quote">Loading quote...</p>
+    <span class="quote-author" id="author">Author</span>
+
+    <div class="button-group">
+      <button class="btn-primary" id="new-quote-btn">New Quote</button>
+      <button class="btn-secondary" id="copy-btn">Copy</button>
+    </div>
+  </div>
+
+  <script>
+    // Built-in quote database
+    const quotes = [
+      { quote: "Simplicity is the ultimate sophistication.", author: "Leonardo da Vinci" },
+      { quote: "Do standard things in standard ways, and extraordinary things in extraordinary ways.", author: "Unknown" },
+      { quote: "Make it simple, but significant.", author: "Don Draper" },
+      { quote: "The best way to predict the future is to create it.", author: "Peter Drucker" },
+      { quote: "It always seems impossible until it's done.", author: "Nelson Mandela" },
+      { quote: "Code is like humor. When you have to explain it, it’s bad.", author: "Cory House" },
+      { quote: "Action is the foundational key to all success.", author: "Pablo Picasso" },
+      { quote: "Everything you can imagine is real.", author: "Pablo Picasso" }
+    ];
+
+    const quoteText = document.getElementById('quote');
+    const authorText = document.getElementById('author');
+    const newQuoteBtn = document.getElementById('new-quote-btn');
+    const copyBtn = document.getElementById('copy-btn');
+
+    let lastIndex = -1;
+
+    // Function to fetch and display a random quote
+    function displayRandomQuote() {
+      // Fade out effect
+      quoteText.classList.add('fade-out');
+      authorText.classList.add('fade-out');
+
+      setTimeout(() => {
+        let randomIndex;
+        
+        // Ensure we don't repeat the exact same quote twice in a row
+        do {
+          randomIndex = Math.floor(Math.random() * quotes.length);
+        } while (randomIndex === lastIndex && quotes.length > 1);
+
+        lastIndex = randomIndex;
+
+        const selected = quotes[randomIndex];
+        quoteText.textContent = selected.quote;
+        authorText.textContent = selected.author;
+
+        // Fade back in
+        quoteText.classList.remove('fade-out');
+        authorText.classList.remove('fade-out');
+      }, 200);
+    }
+
+    // Copy quote to clipboard functionality
+    function copyQuote() {
+      const fullText = `"${quoteText.textContent}" — ${authorText.textContent}`;
+      navigator.clipboard.writeText(fullText).then(() => {
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => {
+          copyBtn.textContent = originalText;
+        }, 1500);
+      });
+    }
+
+    // Event Listeners
+    newQuoteBtn.addEventListener('click', displayRandomQuote);
+    copyBtn.addEventListener('click', copyQuote);
+
+    // Initial load: Display a random quote right when app opens
+    displayRandomQuote();
+  </script>
+</body>
+</html>
