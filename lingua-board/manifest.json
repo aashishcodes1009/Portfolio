@@ -1,0 +1,16 @@
+{
+  "name": "LinguaBoard — Learn a Language",
+  "short_name": "LinguaBoard",
+  "description": "Flashcards, phrases, grammar, and quizzes for Spanish, French, Japanese, Hindi, and Nepali.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#4A3223",
+  "theme_color": "#1F3B2E",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

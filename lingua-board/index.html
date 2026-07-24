@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinguaBoard — Learn a Language</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#1F3B2E">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+:root{
+  --board:#1F3B2E;
+  --board-dark:#152B20;
+  --board-light:#2A4E3B;
+  --frame:#6B4A34;
+  --frame-dark:#4A3223;
+  --frame-light:#8A6647;
+  --chalk:#F5F3E7;
+  --chalk-dim:#C7CFC5;
+  --chalk-yellow:#F2C94C;
+  --chalk-coral:#E8776B;
+  --chalk-blue:#8FC1DE;
+  --shadow:rgba(0,0,0,0.35);
+  --radius:14px;
+}
+
+*{ box-sizing:border-box; }
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+}
+
+html,body{
+  margin:0;
+  padding:0;
+  background:var(--frame-dark);
+  color:var(--chalk);
+  font-family:'Inter', sans-serif;
+  min-height:100vh;
+}
+
+#app{
+  max-width:920px;
+  margin:0 auto;
+  padding:18px 14px 60px;
+}
+
+/* ---------- Header ---------- */
+.app-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  padding:14px 18px;
+  margin-bottom:16px;
+}
+
+.brand{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+}
+
+.brand h1{
+  font-family:'Caveat', cursive;
+  font-weight:700;
+  font-size:2.6rem;
+  margin:0;
+  color:var(--chalk);
+  letter-spacing:0.5px;
+  text-shadow:0 0 14px rgba(245,243,231,0.18);
+}
+
+.brand .tagline{
+  font-size:0.78rem;
+  color:var(--chalk-dim);
+  font-family:'IBM Plex Mono', monospace;
+  letter-spacing:0.04em;
+}
+
+.header-right{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex-wrap:wrap;
+}
+
+.streak-badge{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:0.78rem;
+  color:var(--chalk-dim);
+  border:1px dashed rgba(245,243,231,0.35);
+  border-radius:20px;
+  padding:6px 12px;
+  white-space:nowrap;
+}
+.streak-badge b{ color:var(--chalk-yellow); font-weight:600; }
+
+select.lang-select{
+  appearance:none;
+  background:var(--board-light);
+  color:var(--chalk);
+  border:1px solid rgba(245,243,231,0.3);
+  border-radius:10px;
+  padding:8px 32px 8px 14px;
+  font-family:'Inter', sans-serif;
+  font-weight:600;
+  font-size:0.9rem;
+  cursor:pointer;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0 L5 6 L10 0 Z' fill='%23F5F3E7'/></svg>");
+  background-repeat:no-repeat;
+  background-position:right 12px center;
+}
+select.lang-select:focus-visible{ outline:2px solid var(--chalk-yellow); outline-offset:2px; }
+
+.voice-settings-btn{
+  font-size:0.78rem;
+  padding:6px 12px;
+}
+
+.voice-panel{
+  background:var(--board-dark);
+  border:1px solid rgba(245,243,231,0.25);
+  border-radius:14px;
+  padding:16px 18px;
+  margin:0 18px 16px;
+}
+.voice-panel-title{
+  font-family:'Caveat', cursive;
+  font-weight:700;
+  font-size:1.3rem;
+  color:var(--chalk-yellow);
+  margin-bottom:6px;
+}
+.voice-panel-copy{
+  font-size:0.82rem;
+  color:var(--chalk-dim);
+  line-height:1.5;
+  margin:0 0 12px;
+}
+.voice-panel-copy a{ color:var(--chalk-blue); }
+.voice-panel-row{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.voice-panel-row input{
+  flex:1;
+  min-width:220px;
+  background:rgba(245,243,231,0.06);
+  border:1px solid rgba(245,243,231,0.3);
+  border-radius:8px;
+  padding:9px 12px;
+  color:var(--chalk);
+  font-family:'IBM Plex Mono', monospace;
+  font-size:0.82rem;
+}
+.voice-panel-row input:focus-visible{ outline:2px solid var(--chalk-yellow); outline-offset:1px; }
+.voice-panel-warn{
+  font-size:0.72rem;
+  color:var(--chalk-coral);
+  line-height:1.5;
+  margin:0;
+}
+
+/* ---------- Board frame ---------- */
+.board-frame{
+  background:var(--frame);
+  background-image:
+    linear-gradient(90deg, rgba(0,0,0,0.12), transparent 6%, transparent 94%, rgba(0,0,0,0.12)),
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.05) 0 2px, transparent 2px 40px);
+  border-radius:20px;
+  padding:14px;
+  box-shadow:0 18px 40px var(--shadow), inset 0 0 0 1px var(--frame-light);
+}
+
+.board{
+  background:radial-gradient(circle at 30% 20%, var(--board-light), var(--board) 70%);
+  border-radius:12px;
+  padding:20px;
+  min-height:520px;
+  box-shadow:inset 0 0 60px rgba(0,0,0,0.35);
+  position:relative;
+}
+
+/* ---------- Tabs ---------- */
+.tabs{
+  display:flex;
+  gap:6px;
+  overflow-x:auto;
+  padding-bottom:10px;
+  margin-bottom:14px;
+  border-bottom:1px dashed rgba(245,243,231,0.25);
+}
+.tab-btn{
+  background:transparent;
+  border:none;
+  color:var(--chalk-dim);
+  font-family:'Caveat', cursive;
+  font-size:1.4rem;
+  font-weight:600;
+  padding:6px 16px;
+  cursor:pointer;
+  border-radius:8px 8px 0 0;
+  white-space:nowrap;
+  transition:color 0.15s ease;
+}
+.tab-btn:hover{ color:var(--chalk); }
+.tab-btn.active{
+  color:var(--chalk-yellow);
+  text-decoration:underline wavy rgba(242,201,76,0.5) 2px;
+  text-underline-offset:6px;
+}
+.tab-btn:focus-visible{ outline:2px solid var(--chalk-yellow); outline-offset:2px; }
+
+/* ---------- Category chips ---------- */
+.chip-row{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:18px;
+}
+.chip{
+  background:rgba(245,243,231,0.06);
+  border:1px solid rgba(245,243,231,0.25);
+  color:var(--chalk-dim);
+  font-size:0.8rem;
+  font-family:'Inter', sans-serif;
+  font-weight:500;
+  padding:6px 14px;
+  border-radius:20px;
+  cursor:pointer;
+  transition:all 0.15s ease;
+}
+.chip:hover{ border-color:var(--chalk-blue); color:var(--chalk); }
+.chip.active{
+  background:var(--chalk-blue);
+  border-color:var(--chalk-blue);
+  color:var(--board-dark);
+  font-weight:600;
+}
+.chip:focus-visible{ outline:2px solid var(--chalk-yellow); outline-offset:2px; }
+
+/* ---------- Flashcard ---------- */
+.card-stage{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:16px;
+  padding:10px 0 6px;
+}
+
+.card-counter{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:0.78rem;
+  color:var(--chalk-dim);
+}
+
+.flashcard{
+  width:100%;
+  max-width:440px;
+  height:260px;
+  perspective:1200px;
+  cursor:pointer;
+}
+.flashcard-inner{
+  position:relative;
+  width:100%;
+  height:100%;
+  transition:transform 0.5s cubic-bezier(.4,.2,.2,1);
+  transform-style:preserve-3d;
+}
+.flashcard.flipped .flashcard-inner{ transform:rotateY(180deg); }
+
+.flashcard-face{
+  position:absolute;
+  inset:0;
+  backface-visibility:hidden;
+  border-radius:12px;
+  border:2px dashed rgba(245,243,231,0.4);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  padding:24px;
+  text-align:center;
+  background:rgba(245,243,231,0.03);
+}
+.flashcard-face.back{ transform:rotateY(180deg); }
+
+.face-label{
+  position:absolute;
+  top:12px;
+  left:16px;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:0.68rem;
+  letter-spacing:0.08em;
+  color:var(--chalk-dim);
+  text-transform:uppercase;
+}
+
+.term{
+  font-family:'Caveat', cursive;
+  font-weight:700;
+  font-size:2.6rem;
+  color:var(--chalk);
+  line-height:1.1;
+}
+.pronunciation{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:0.95rem;
+  color:var(--chalk-blue);
+}
+.translation{
+  font-family:'Caveat', cursive;
+  font-weight:700;
+  font-size:2.2rem;
+  color:var(--chalk-yellow);
+}
+.example{
+  font-size:0.85rem;
+  color:var(--chalk-dim);
+  font-style:italic;
+  max-width:340px;
+}
+.hint{
+  font-size:0.72rem;
+  color:var(--chalk-dim);
+  opacity:0.7;
+}
+
+.speaker-btn{
+  background:none;
+  border:1px solid rgba(245,243,231,0.35);
+  border-radius:50%;
+  width:34px;
+  height:34px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  color:var(--chalk);
+}
+.speaker-btn:hover{ border-color:var(--chalk-blue); }
+.speaker-btn:focus-visible{ outline:2px solid var(--chalk-yellow); outline-offset:2px; }
+
+.card-controls{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+
+.btn{
+  font-family:'Inter', sans-serif;
+  font-weight:600;
+  font-size:0.85rem;
+  padding:10px 18px;
+  border-radius:10px;
+  border:none;
+  cursor:pointer;
+  transition:transform 0.1s ease, filter 0.15s ease;
+}
+.btn:active{ transform:translateY(1px); }
+.btn:focus-visible{ outline:2px solid var(--chalk-yellow); outline-offset:2px; }
+.btn-ghost{
+  background:transparent;
+  border:1px solid rgba(245,243,231,0.35);
+  color:var(--chalk);
+}
+.btn-ghost:hover{ border-color:var(--chalk); }
+.btn-coral{ background:var(--chalk-coral); color:#3A1410; }
+.btn-coral:hover{ filter:brightness(1.08); }
+.btn-green{ background:#9FD8A6; color:#123219; }
+.btn-green:hover{ filter:brightness(1.08); }
+.btn-blue{ background:var(--chalk-blue); color:#0E2A38; }
+.btn-blue:hover{ filter:brightness(1.08); }
+.btn:disabled{ opacity:0.4; cursor:not-allowed; }
+
+/* chalk dust burst on "Got it" */
+.dust-particle{
+  position:absolute;
+  width:5px; height:5px;
+  background:var(--chalk);
+  border-radius:50%;
+  pointer-events:none;
+  opacity:0.9;
+  animation:dust-fly 0.7s ease-out forwards;
+}
+@keyframes dust-fly{
+  to{ transform:translate(var(--dx), var(--dy)) scale(0.2); opacity:0; }
+}
+
+/* ---------- Progress (eraser bar) ---------- */
+.progress-wrap{
+  margin-top:22px;
+  padding-top:14px;
+  border-top:1px dashed rgba(245,243,231,0.25);
+}
+.progress-label{
+  display:flex;
+  justify-content:space-between;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:0.75rem;
+  color:var(--chalk-dim);
+  margin-bottom:6px;
+}
+.progress-track{
+  position:relative;
+  height:16px;
+  border-radius:8px;
+  overflow:hidden;
+  background:
+    repeating-linear-gradient(45deg, rgba(245,243,231,0.18) 0 2px, transparent 2px 6px),
+    var(--board-dark);
+  border:1px solid rgba(245,243,231,0.2);
+}
+.progress-fill{
+  position:absolute;
+  left:0; top:0; bottom:0;
+  background:linear-gradient(90deg, var(--frame-light), var(--frame));
+  transition:width 0.4s ease;
+  box-shadow:inset -3px 0 6px rgba(0,0,0,0.25);
+}
+.progress-fill::after{
+  content:"";
+  position:absolute;
+  right:-2px; top:0; bottom:0;
+  width:10px;
+  background:rgba(245,243,231,0.5);
+  border-radius:2px;
+}
+
+/* ---------- Quiz ---------- */
+.quiz-question{
+  font-family:'Caveat', cursive;
+  font-weight:700;
+  font-size:1.8rem;
+  text-align:center;
+  color:var(--chalk);
+  margin-bottom:6px;
+}
+.quiz-sub{
+  text-align:center;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:0.75rem;
+  color:var(--chalk-dim);
+  margin-bottom:20px;
+}
+.quiz-options{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  max-width:520px;
+  margin:0 auto;
+}
+@media (max-width:520px){
+  .quiz-options{ grid-template-columns:1fr; }
+}
+.quiz-option{
+  background:rgba(245,243,231,0.05);
+  border:1px solid rgba(245,243,231,0.3);
+  color:var(--chalk);
+  font-family:'Inter', sans-serif;
+  font-size:0.9rem;
+  font-weight:500;
+  padding:14px 12px;
+  border-radius:10px;
+  cursor:pointer;
+  text-align:left;
+  transition:all 0.15s ease;
+}
+.quiz-option:hover:not(:disabled){ border-color:var(--chalk-blue); }
+.quiz-option:focus-visible{ outline:2px solid var(--chalk-yellow); outline-offset:2px; }
+.quiz-option.correct{ background:#9FD8A6; color:#123219; border-color:#9FD8A6; }
+.quiz-option.wrong{ background:var(--chalk-coral); color:#3A1410; border-color:var(--chalk-coral); }
+.quiz-option:disabled{ cursor:default; }
+
+.quiz-footer{
+  display:flex;
+  justify-content:center;
+  margin-top:20px;
+}
+
+.results-wrap{
+  text-align:center;
+  padding:30px 10px;
+}
+.results-score{
+  font-family:'Caveat', cursive;
+  font-weight:700;
+  font-size:4rem;
+  color:var(--chalk-yellow);
+}
+.results-sub{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:0.85rem;
+  color:var(--chalk-dim);
+  margin-bottom:22px;
+}
+.results-actions{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+
+/* ---------- Voice toast ---------- */
+.voice-toast{
+  position:absolute;
+  left:50%;
+  bottom:16px;
+  transform:translateX(-50%);
+  background:var(--board-dark);
+  border:1px solid rgba(245,243,231,0.35);
+  color:var(--chalk);
+  font-family:'Inter', sans-serif;
+  font-size:0.78rem;
+  padding:8px 16px;
+  border-radius:20px;
+  box-shadow:0 8px 20px rgba(0,0,0,0.35);
+  max-width:88%;
+  text-align:center;
+  animation:toast-fade 3.2s ease forwards;
+  z-index:5;
+}
+@keyframes toast-fade{
+  0%{ opacity:0; transform:translate(-50%, 8px); }
+  10%{ opacity:1; transform:translate(-50%, 0); }
+  85%{ opacity:1; }
+  100%{ opacity:0; transform:translate(-50%, 0); }
+}
+
+/* ---------- Grammar list ---------- */
+.empty-state{
+  text-align:center;
+  color:var(--chalk-dim);
+  font-family:'IBM Plex Mono', monospace;
+  font-size:0.85rem;
+  padding:40px 10px;
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ============ DATA ============ */
+const DATA = {
+  es: {
+    name: "Spanish",
+    speechLang: "es-ES",
+    vocabulary: [
+      {cat:"Greetings", term:"Hola", translation:"Hello", pron:"OH-lah"},
+      {cat:"Greetings", term:"Buenos días", translation:"Good morning", pron:"BWEH-nohs DEE-ahs"},
+      {cat:"Greetings", term:"Buenas noches", translation:"Good night", pron:"BWEH-nahs NOH-chehs"},
+      {cat:"Greetings", term:"Adiós", translation:"Goodbye", pron:"ah-dee-OHS"},
+      {cat:"Greetings", term:"Por favor", translation:"Please", pron:"por fah-VOR"},
+      {cat:"Greetings", term:"Gracias", translation:"Thank you", pron:"GRAH-syahs"},
+      {cat:"Food & Drink", term:"Agua", translation:"Water", pron:"AH-gwah"},
+      {cat:"Food & Drink", term:"Pan", translation:"Bread", pron:"pahn"},
+      {cat:"Food & Drink", term:"Manzana", translation:"Apple", pron:"mahn-SAH-nah"},
+      {cat:"Food & Drink", term:"Café", translation:"Coffee", pron:"kah-FEH"},
+      {cat:"Food & Drink", term:"Queso", translation:"Cheese", pron:"KEH-soh"},
+      {cat:"Food & Drink", term:"Pollo", translation:"Chicken", pron:"POH-yoh"},
+      {cat:"Travel", term:"Aeropuerto", translation:"Airport", pron:"ah-eh-roh-PWEHR-toh"},
+      {cat:"Travel", term:"Hotel", translation:"Hotel", pron:"oh-TEHL"},
+      {cat:"Travel", term:"Estación", translation:"Station", pron:"ehs-tah-see-OHN"},
+      {cat:"Travel", term:"Boleto", translation:"Ticket", pron:"boh-LEH-toh"},
+      {cat:"Travel", term:"Mapa", translation:"Map", pron:"MAH-pah"},
+      {cat:"Travel", term:"Pasaporte", translation:"Passport", pron:"pah-sah-POR-teh"},
+      {cat:"Numbers", term:"Uno", translation:"One", pron:"OO-noh"},
+      {cat:"Numbers", term:"Dos", translation:"Two", pron:"dohs"},
+      {cat:"Numbers", term:"Tres", translation:"Three", pron:"trehs"},
+      {cat:"Numbers", term:"Cuatro", translation:"Four", pron:"KWAH-troh"},
+      {cat:"Numbers", term:"Cinco", translation:"Five", pron:"SEEN-koh"},
+      {cat:"Numbers", term:"Diez", translation:"Ten", pron:"dee-EHS"}
+    ],
+    phrases: [
+      {term:"¿Cómo estás?", translation:"How are you?", pron:"KOH-moh ehs-TAHS"},
+      {term:"Me llamo...", translation:"My name is...", pron:"meh YAH-moh"},
+      {term:"¿Dónde está el baño?", translation:"Where is the bathroom?", pron:"DOHN-deh ehs-TAH ehl BAH-nyoh"},
+      {term:"No entiendo", translation:"I don't understand", pron:"noh ehn-tee-EHN-doh"},
+      {term:"¿Cuánto cuesta?", translation:"How much does it cost?", pron:"KWAHN-toh KWEHS-tah"},
+      {term:"Mucho gusto", translation:"Nice to meet you", pron:"MOO-choh GOOS-toh"},
+      {term:"¿Puedes ayudarme?", translation:"Can you help me?", pron:"PWEH-dehs ah-yoo-DAR-meh"},
+      {term:"Lo siento", translation:"I'm sorry", pron:"loh see-EHN-toh"},
+      {term:"¿Hablas inglés?", translation:"Do you speak English?", pron:"AH-blahs een-GLEHS"},
+      {term:"Estoy perdido", translation:"I am lost", pron:"ehs-TOY pehr-DEE-doh"},
+      {term:"Buen provecho", translation:"Enjoy your meal", pron:"bwehn proh-VEH-choh"},
+      {term:"Hasta luego", translation:"See you later", pron:"AHS-tah LWEH-goh"}
+    ],
+    grammar: [
+      {title:"Gender of nouns", explanation:"Spanish nouns are masculine or feminine. Most ending in -o are masculine, most ending in -a are feminine.", example:"el libro (the book) · la mesa (the table)"},
+      {title:"Ser vs Estar", explanation:"Both mean \"to be.\" Use ser for permanent traits and estar for temporary states or location.", example:"Ella es alta · Ella está cansada"},
+      {title:"Present tense -ar verbs", explanation:"Drop -ar and add -o, -as, -a, -amos, -áis, -an.", example:"hablar → yo hablo, nosotros hablamos"},
+      {title:"Adjective agreement", explanation:"Adjectives match the gender and number of the noun they describe.", example:"el coche rojo · la casa roja"},
+      {title:"Question words", explanation:"Common question words always carry an accent mark: qué, quién, cómo, cuándo, dónde, por qué.", example:"¿Qué hora es?"},
+      {title:"Direct object pronouns", explanation:"Lo, la, los, las replace direct objects and usually go before the conjugated verb.", example:"¿Tienes el libro? Sí, lo tengo."}
+    ]
+  },
+  fr: {
+    name: "French",
+    speechLang: "fr-FR",
+    vocabulary: [
+      {cat:"Greetings", term:"Bonjour", translation:"Hello", pron:"bohn-ZHOOR"},
+      {cat:"Greetings", term:"Bonsoir", translation:"Good evening", pron:"bohn-SWAHR"},
+      {cat:"Greetings", term:"Au revoir", translation:"Goodbye", pron:"oh ruh-VWAHR"},
+      {cat:"Greetings", term:"S'il vous plaît", translation:"Please", pron:"seel voo PLEH"},
+      {cat:"Greetings", term:"Merci", translation:"Thank you", pron:"mehr-SEE"},
+      {cat:"Greetings", term:"Enchanté", translation:"Nice to meet you", pron:"ahn-shahn-TAY"},
+      {cat:"Food & Drink", term:"Eau", translation:"Water", pron:"oh"},
+      {cat:"Food & Drink", term:"Pain", translation:"Bread", pron:"pan"},
+      {cat:"Food & Drink", term:"Pomme", translation:"Apple", pron:"pum"},
+      {cat:"Food & Drink", term:"Café", translation:"Coffee", pron:"kah-FAY"},
+      {cat:"Food & Drink", term:"Fromage", translation:"Cheese", pron:"froh-MAHZH"},
+      {cat:"Food & Drink", term:"Poulet", translation:"Chicken", pron:"poo-LEH"},
+      {cat:"Travel", term:"Aéroport", translation:"Airport", pron:"ah-ay-roh-POR"},
+      {cat:"Travel", term:"Hôtel", translation:"Hotel", pron:"oh-TEL"},
+      {cat:"Travel", term:"Gare", translation:"Train station", pron:"gahr"},
+      {cat:"Travel", term:"Billet", translation:"Ticket", pron:"bee-YEH"},
+      {cat:"Travel", term:"Carte", translation:"Map", pron:"kahrt"},
+      {cat:"Travel", term:"Passeport", translation:"Passport", pron:"pahs-POR"},
+      {cat:"Numbers", term:"Un", translation:"One", pron:"uhn"},
+      {cat:"Numbers", term:"Deux", translation:"Two", pron:"duh"},
+      {cat:"Numbers", term:"Trois", translation:"Three", pron:"trwah"},
+      {cat:"Numbers", term:"Quatre", translation:"Four", pron:"KAH-truh"},
+      {cat:"Numbers", term:"Cinq", translation:"Five", pron:"sank"},
+      {cat:"Numbers", term:"Dix", translation:"Ten", pron:"dees"}
+    ],
+    phrases: [
+      {term:"Comment ça va?", translation:"How's it going?", pron:"koh-mahn sah VAH"},
+      {term:"Je m'appelle...", translation:"My name is...", pron:"zhuh mah-PEL"},
+      {term:"Où sont les toilettes?", translation:"Where is the bathroom?", pron:"oo sohn lay twah-LET"},
+      {term:"Je ne comprends pas", translation:"I don't understand", pron:"zhuh nuh kohm-PRAHN pah"},
+      {term:"Combien ça coûte?", translation:"How much does it cost?", pron:"kohm-bee-AHN sah koot"},
+      {term:"Ravi de vous rencontrer", translation:"Pleased to meet you", pron:"rah-VEE duh voo rahn-kohn-TRAY"},
+      {term:"Pouvez-vous m'aider?", translation:"Can you help me?", pron:"poo-vay voo may-DAY"},
+      {term:"Je suis désolé", translation:"I'm sorry", pron:"zhuh swee day-zoh-LAY"},
+      {term:"Parlez-vous anglais?", translation:"Do you speak English?", pron:"par-lay voo ahn-GLEH"},
+      {term:"Je suis perdu", translation:"I am lost", pron:"zhuh swee pehr-DUE"},
+      {term:"Bon appétit", translation:"Enjoy your meal", pron:"bohn ah-pay-TEE"},
+      {term:"À bientôt", translation:"See you soon", pron:"ah bee-ahn-TOH"}
+    ],
+    grammar: [
+      {title:"Gendered nouns", explanation:"Every French noun is masculine or feminine, and articles change to match.", example:"le soleil (the sun) · la lune (the moon)"},
+      {title:"Être vs Avoir", explanation:"Être means \"to be,\" avoir means \"to have.\" Avoir is used for age and several set expressions.", example:"J'ai vingt ans (lit. I have twenty years)"},
+      {title:"Present tense -er verbs", explanation:"Drop -er and add -e, -es, -e, -ons, -ez, -ent.", example:"parler → je parle, nous parlons"},
+      {title:"Adjective placement", explanation:"Most adjectives follow the noun, but common short ones like beau, bon, grand come before it.", example:"une voiture rouge · un grand jour"},
+      {title:"Negation with ne...pas", explanation:"Wrap the conjugated verb with ne and pas to negate a sentence.", example:"Je ne sais pas"},
+      {title:"Contractions with de/à", explanation:"De + le becomes du, and à + le becomes au.", example:"Je viens du marché"}
+    ]
+  },
+  ja: {
+    name: "Japanese",
+    speechLang: "ja-JP",
+    vocabulary: [
+      {cat:"Greetings", term:"こんにちは", translation:"Hello", pron:"kohn-nee-chee-wah"},
+      {cat:"Greetings", term:"おはようございます", translation:"Good morning", pron:"oh-hah-yoh goh-zah-ee-mahs"},
+      {cat:"Greetings", term:"さようなら", translation:"Goodbye", pron:"sah-yoh-nah-rah"},
+      {cat:"Greetings", term:"お願いします", translation:"Please", pron:"oh-neh-gah-ee-shee-mahs"},
+      {cat:"Greetings", term:"ありがとう", translation:"Thank you", pron:"ah-ree-gah-toh"},
+      {cat:"Greetings", term:"はじめまして", translation:"Nice to meet you", pron:"hah-jee-meh-mah-shee-teh"},
+      {cat:"Food & Drink", term:"水", translation:"Water", pron:"mee-zoo"},
+      {cat:"Food & Drink", term:"パン", translation:"Bread", pron:"pahn"},
+      {cat:"Food & Drink", term:"りんご", translation:"Apple", pron:"reen-goh"},
+      {cat:"Food & Drink", term:"コーヒー", translation:"Coffee", pron:"koh-hee"},
+      {cat:"Food & Drink", term:"チーズ", translation:"Cheese", pron:"chee-zoo"},
+      {cat:"Food & Drink", term:"鶏肉", translation:"Chicken", pron:"toh-ree-nee-koo"},
+      {cat:"Travel", term:"空港", translation:"Airport", pron:"koo-koh"},
+      {cat:"Travel", term:"ホテル", translation:"Hotel", pron:"hoh-teh-roo"},
+      {cat:"Travel", term:"駅", translation:"Station", pron:"eh-kee"},
+      {cat:"Travel", term:"切符", translation:"Ticket", pron:"keep-poo"},
+      {cat:"Travel", term:"地図", translation:"Map", pron:"chee-zoo"},
+      {cat:"Travel", term:"パスポート", translation:"Passport", pron:"pahs-poh-toh"},
+      {cat:"Numbers", term:"一", translation:"One", pron:"ee-chee"},
+      {cat:"Numbers", term:"二", translation:"Two", pron:"nee"},
+      {cat:"Numbers", term:"三", translation:"Three", pron:"sahn"},
+      {cat:"Numbers", term:"四", translation:"Four", pron:"yohn"},
+      {cat:"Numbers", term:"五", translation:"Five", pron:"goh"},
+      {cat:"Numbers", term:"十", translation:"Ten", pron:"joo"}
+    ],
+    phrases: [
+      {term:"お元気ですか", translation:"How are you?", pron:"oh-gen-kee dess kah"},
+      {term:"私の名前は...です", translation:"My name is...", pron:"wah-tah-shee noh nah-mah-eh wah ... dess"},
+      {term:"トイレはどこですか", translation:"Where is the bathroom?", pron:"toy-reh wah doh-koh dess kah"},
+      {term:"わかりません", translation:"I don't understand", pron:"wah-kah-ree-mah-sen"},
+      {term:"いくらですか", translation:"How much does it cost?", pron:"ee-koo-rah dess kah"},
+      {term:"どういたしまして", translation:"You're welcome", pron:"doh ee-tah-shee-mah-shteh"},
+      {term:"手伝ってもらえますか", translation:"Can you help me?", pron:"teh-tsoo-daht-teh moh-rah-eh-mahs kah"},
+      {term:"すみません", translation:"Excuse me / I'm sorry", pron:"soo-mee-mah-sen"},
+      {term:"英語を話せますか", translation:"Do you speak English?", pron:"eh-ee-goh oh hah-nah-seh-mahs kah"},
+      {term:"道に迷いました", translation:"I am lost", pron:"mee-chee nee mah-yoh-ee-mah-shtah"},
+      {term:"いただきます", translation:"(said before eating)", pron:"ee-tah-dah-kee-mahs"},
+      {term:"また今度", translation:"See you again", pron:"mah-tah kohn-doh"}
+    ],
+    grammar: [
+      {title:"Basic sentence order", explanation:"Japanese follows Subject-Object-Verb order, the opposite of English's Subject-Verb-Object.", example:"私はりんごを食べます (I apple eat)"},
+      {title:"Particles wa and ga", explanation:"The particle wa marks the topic of a sentence, and ga marks the grammatical subject.", example:"私は学生です (As for me, I am a student)"},
+      {title:"Politeness with desu/masu", explanation:"Adding desu after nouns/adjectives, or masu to a verb stem, makes speech polite.", example:"食べる → 食べます"},
+      {title:"Counting with counters", explanation:"Japanese uses different counter words depending on what is being counted, such as hon for long objects.", example:"二本 (nihon, two long thin objects)"},
+      {title:"Possession with no", explanation:"The particle no connects two nouns to show possession, like an apostrophe-s.", example:"私の本 (my book)"},
+      {title:"Question particle ka", explanation:"Adding ka to the end of a sentence turns it into a question without changing word order.", example:"学生ですか (Are you a student?)"}
+    ]
+  },
+  hi: {
+    name: "Hindi",
+    speechLang: "hi-IN",
+    vocabulary: [
+      {cat:"Greetings", term:"नमस्ते", translation:"Hello", pron:"nuh-mus-TAY"},
+      {cat:"Greetings", term:"सुप्रभात", translation:"Good morning", pron:"soo-pruh-BHAHT"},
+      {cat:"Greetings", term:"शुभ रात्रि", translation:"Good night", pron:"shoobh RAHT-ree"},
+      {cat:"Greetings", term:"अलविदा", translation:"Goodbye", pron:"ul-vee-DAH"},
+      {cat:"Greetings", term:"कृपया", translation:"Please", pron:"KRIP-uh-yah"},
+      {cat:"Greetings", term:"धन्यवाद", translation:"Thank you", pron:"dhun-yuh-VAHD"},
+      {cat:"Food & Drink", term:"पानी", translation:"Water", pron:"PAH-nee"},
+      {cat:"Food & Drink", term:"रोटी", translation:"Bread", pron:"ROH-tee"},
+      {cat:"Food & Drink", term:"सेब", translation:"Apple", pron:"sayb"},
+      {cat:"Food & Drink", term:"चाय", translation:"Tea", pron:"chai"},
+      {cat:"Food & Drink", term:"पनीर", translation:"Cheese", pron:"puh-NEER"},
+      {cat:"Food & Drink", term:"मुर्गी", translation:"Chicken", pron:"MOOR-gee"},
+      {cat:"Travel", term:"हवाई अड्डा", translation:"Airport", pron:"huh-VAI UD-dah"},
+      {cat:"Travel", term:"होटल", translation:"Hotel", pron:"HOH-tuhl"},
+      {cat:"Travel", term:"स्टेशन", translation:"Station", pron:"STAY-shun"},
+      {cat:"Travel", term:"टिकट", translation:"Ticket", pron:"TICK-ut"},
+      {cat:"Travel", term:"नक्शा", translation:"Map", pron:"NUCK-shah"},
+      {cat:"Travel", term:"पासपोर्ट", translation:"Passport", pron:"PASS-port"},
+      {cat:"Numbers", term:"एक", translation:"One", pron:"ayk"},
+      {cat:"Numbers", term:"दो", translation:"Two", pron:"doh"},
+      {cat:"Numbers", term:"तीन", translation:"Three", pron:"teen"},
+      {cat:"Numbers", term:"चार", translation:"Four", pron:"chaar"},
+      {cat:"Numbers", term:"पांच", translation:"Five", pron:"paanch"},
+      {cat:"Numbers", term:"दस", translation:"Ten", pron:"duss"}
+    ],
+    phrases: [
+      {term:"आप कैसे हैं?", translation:"How are you?", pron:"aap KAI-say hain"},
+      {term:"मेरा नाम ... है", translation:"My name is...", pron:"MAY-rah naam ... hai"},
+      {term:"बाथरूम कहाँ है?", translation:"Where is the bathroom?", pron:"BATH-room kuh-HAAN hai"},
+      {term:"मुझे समझ नहीं आया", translation:"I don't understand", pron:"MOO-jay suh-MUJH nuh-HEE AH-yah"},
+      {term:"यह कितने का है?", translation:"How much does it cost?", pron:"yeh KIT-nay kah hai"},
+      {term:"आपसे मिलकर खुशी हुई", translation:"Nice to meet you", pron:"AAP-say MIL-kar khoo-SHEE hoo-EE"},
+      {term:"क्या आप मेरी मदद कर सकते हैं?", translation:"Can you help me?", pron:"kyah aap MAY-ree muh-DUD kar SUCK-tay hain"},
+      {term:"माफ़ कीजिए", translation:"I'm sorry", pron:"maaf KEE-jee-ay"},
+      {term:"क्या आप अंग्रेजी बोलते हैं?", translation:"Do you speak English?", pron:"kyah aap un-GRAY-zee BOL-tay hain"},
+      {term:"मैं खो गया हूँ", translation:"I am lost", pron:"main khoh guh-YAH hoon"},
+      {term:"भोजन का आनंद लें", translation:"Enjoy your meal", pron:"BOH-jun kah AH-nund len"},
+      {term:"फिर मिलेंगे", translation:"See you later", pron:"phir mih-LEN-gay"}
+    ],
+    grammar: [
+      {title:"Gender of nouns", explanation:"Hindi nouns are masculine or feminine, and verbs and adjectives change to agree with the noun's gender.", example:"लड़का अच्छा है (the boy is good) · लड़की अच्छी है (the girl is good)"},
+      {title:"Postpositions, not prepositions", explanation:"Hindi places small grammar words like \"in,\" \"on,\" and \"of\" after the noun rather than before it.", example:"घर में (in the house — literally \"house in\")"},
+      {title:"Verb goes last", explanation:"Hindi sentences follow Subject-Object-Verb order, so the verb comes at the end.", example:"मैं पानी पीता हूँ (I water drink)"},
+      {title:"Polite vs familiar \"you\"", explanation:"Hindi has three levels of \"you\" — तू, तुम, and आप — and verb endings change with each one.", example:"आप कैसे हैं (formal) · तुम कैसे हो (informal)"},
+      {title:"Ergative ने in the past tense", explanation:"With many transitive verbs in the past tense, the subject takes the marker ने (ne).", example:"मैंने खाना खाया (I ate food)"},
+      {title:"Question words before the verb", explanation:"Common question words like क्या, कौन, कहाँ, and कब usually sit right before the verb.", example:"आप कहाँ जा रहे हैं? (Where are you going?)"}
+    ]
+  },
+  ne: {
+    name: "Nepali",
+    speechLang: "ne-NP",
+    vocabulary: [
+      {cat:"Greetings", term:"नमस्ते", translation:"Hello", pron:"nuh-mus-TAY"},
+      {cat:"Greetings", term:"शुभ प्रभात", translation:"Good morning", pron:"shoo-bhuh pruh-BHAHT"},
+      {cat:"Greetings", term:"शुभ रात्री", translation:"Good night", pron:"shoo-bhuh RAAT-ree"},
+      {cat:"Greetings", term:"फेरि भेटौंला", translation:"Goodbye", pron:"FEH-ree bheh-TOWN-lah"},
+      {cat:"Greetings", term:"कृपया", translation:"Please", pron:"KRIP-uh-yah"},
+      {cat:"Greetings", term:"धन्यवाद", translation:"Thank you", pron:"dhun-yuh-BAHD"},
+      {cat:"Food & Drink", term:"पानी", translation:"Water", pron:"PAH-nee"},
+      {cat:"Food & Drink", term:"रोटी", translation:"Bread", pron:"ROH-tee"},
+      {cat:"Food & Drink", term:"स्याउ", translation:"Apple", pron:"SYAU"},
+      {cat:"Food & Drink", term:"चिया", translation:"Tea", pron:"CHEE-yah"},
+      {cat:"Food & Drink", term:"पनीर", translation:"Cheese", pron:"puh-NEER"},
+      {cat:"Food & Drink", term:"कुखुराको मासु", translation:"Chicken", pron:"koo-khoo-RAH-koh MAH-soo"},
+      {cat:"Travel", term:"हवाई अड्डा", translation:"Airport", pron:"huh-VAI UD-dah"},
+      {cat:"Travel", term:"होटल", translation:"Hotel", pron:"HOH-tuhl"},
+      {cat:"Travel", term:"स्टेशन", translation:"Station", pron:"STAY-shun"},
+      {cat:"Travel", term:"टिकट", translation:"Ticket", pron:"TICK-ut"},
+      {cat:"Travel", term:"नक्सा", translation:"Map", pron:"NUCK-sah"},
+      {cat:"Travel", term:"राहदानी", translation:"Passport", pron:"RAH-huh-dah-nee"},
+      {cat:"Numbers", term:"एक", translation:"One", pron:"ayk"},
+      {cat:"Numbers", term:"दुई", translation:"Two", pron:"doo-EE"},
+      {cat:"Numbers", term:"तीन", translation:"Three", pron:"teen"},
+      {cat:"Numbers", term:"चार", translation:"Four", pron:"chaar"},
+      {cat:"Numbers", term:"पाँच", translation:"Five", pron:"paanch"},
+      {cat:"Numbers", term:"दश", translation:"Ten", pron:"duss"}
+    ],
+    phrases: [
+      {term:"तपाईंलाई कस्तो छ?", translation:"How are you?", pron:"tuh-PIE-lie KUS-toh chuh"},
+      {term:"मेरो नाम ... हो", translation:"My name is...", pron:"MEH-roh naam ... hoh"},
+      {term:"शौचालय कहाँ छ?", translation:"Where is the bathroom?", pron:"sow-CHAH-luh-yuh kuh-HAAN chuh"},
+      {term:"मलाई बुझिन", translation:"I don't understand", pron:"muh-LIE boo-JHEE-nuh"},
+      {term:"यो कति हो?", translation:"How much does it cost?", pron:"yoh KUH-tee hoh"},
+      {term:"तपाईंलाई भेटेर खुसी लाग्यो", translation:"Nice to meet you", pron:"tuh-PIE-lie beh-TEH-rah KOO-see LUG-yoh"},
+      {term:"मलाई मद्दत गर्न सक्नुहुन्छ?", translation:"Can you help me?", pron:"muh-LIE MUD-dut GUR-nuh SUCK-noo-hoon-chuh"},
+      {term:"माफ गर्नुहोस्", translation:"I'm sorry", pron:"maaf GUR-noo-hohs"},
+      {term:"तपाईं अंग्रेजी बोल्नुहुन्छ?", translation:"Do you speak English?", pron:"tuh-PIE un-GRAY-jee BOHL-noo-hoon-chuh"},
+      {term:"म बाटो बिर्सें", translation:"I am lost", pron:"muh BAH-toh BEER-sen"},
+      {term:"मीठो मानेर खानुहोस्", translation:"Enjoy your meal", pron:"MEE-thoh MAH-nair KHAH-noo-hohs"},
+      {term:"फेरि भेटौंला", translation:"See you later", pron:"FEH-ree bheh-TOWN-lah"}
+    ],
+    grammar: [
+      {title:"Verb goes last", explanation:"Like Hindi, Nepali follows Subject-Object-Verb order, with the verb always at the end of the sentence.", example:"म पानी पिउँछु (I water drink)"},
+      {title:"Levels of politeness", explanation:"Nepali verb endings change based on how formal the speaker wants to be.", example:"तिमी जान्छौ (informal) · तपाईं जानुहुन्छ (formal)"},
+      {title:"Postpositions", explanation:"Nepali attaches small grammar particles after the noun, similar to Hindi, rather than using prepositions before it.", example:"घरमा (in the house — literally \"house-in\")"},
+      {title:"No grammatical gender for most nouns", explanation:"Unlike Hindi, most Nepali nouns don't carry grammatical gender, which simplifies adjective agreement.", example:"राम्रो घर (good house) works regardless of the noun"},
+      {title:"Tag questions with होइन र", explanation:"Adding होइन र at the end of a sentence can turn a statement into a question, similar to a tag question.", example:"तपाईं भोकाउनुभयो, होइन र? (You're hungry, aren't you?)"},
+      {title:"Counting with numeral classifiers", explanation:"When counting objects, Nepali sometimes adds a classifier word like वटा after the number.", example:"दुई वटा स्याउ (two apples)"}
+    ]
+  }
+};
+
+/* ============ STATE & PERSISTENCE ============ */
+const STORAGE_KEY = "linguaboard_progress_v1";
+
+function loadProgress(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){ console.error("Could not read saved progress", e); }
+  return { streak:{lastDate:null, count:0}, langs:{} };
+}
+function saveProgress(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); }
+  catch(e){ console.error("Could not save progress", e); }
+}
+function ensureLang(lang){
+  if(!progress.langs[lang]) progress.langs[lang] = { known:{}, quizHistory:[], bestScore:0 };
+}
+function touchStreak(){
+  const today = new Date().toISOString().slice(0,10);
+  const s = progress.streak;
+  if(s.lastDate === today) return;
+  if(s.lastDate){
+    const prev = new Date(s.lastDate);
+    const diffDays = Math.round((new Date(today) - prev) / 86400000);
+    s.count = diffDays === 1 ? s.count + 1 : 1;
+  } else {
+    s.count = 1;
+  }
+  s.lastDate = today;
+  saveProgress();
+}
+
+let progress = loadProgress();
+
+/* Optional cloud-voice API key (ElevenLabs), stored separately from progress
+   since it's a credential, not learning data. Not part of `state` because
+   it shouldn't reset when switching language/tab. */
+const VOICE_KEY_STORAGE = "linguaboard_voice_key_v1";
+let voiceSettingsOpen = false;
+function getVoiceKey(){
+  try{ return localStorage.getItem(VOICE_KEY_STORAGE) || ""; }
+  catch(e){ return ""; }
+}
+function saveVoiceKey(key){
+  try{ localStorage.setItem(VOICE_KEY_STORAGE, key); }
+  catch(e){ console.error("Could not save voice key", e); }
+}
+function clearVoiceKey(){
+  try{ localStorage.removeItem(VOICE_KEY_STORAGE); }
+  catch(e){ console.error("Could not clear voice key", e); }
+}
+
+const state = {
+  lang: "es",
+  tab: "vocabulary",      // vocabulary | phrases | grammar | quiz
+  catFilter: "All",
+  cardIndex: 0,
+  flipped: false,
+  quiz: null              // {questions, index, score, answered, selected}
+};
+
+/* ============ HELPERS ============ */
+function allItemsForLang(lang){
+  const d = DATA[lang];
+  return {
+    vocabulary: d.vocabulary.map((it,i)=>({...it, id:`${lang}_vocabulary_${i}`})),
+    phrases: d.phrases.map((it,i)=>({...it, id:`${lang}_phrases_${i}`})),
+    grammar: d.grammar.map((it,i)=>({...it, id:`${lang}_grammar_${i}`}))
+  };
+}
+function currentDeck(){
+  const items = allItemsForLang(state.lang);
+  if(state.tab === "vocabulary"){
+    const filtered = state.catFilter === "All" ? items.vocabulary : items.vocabulary.filter(v=>v.cat===state.catFilter);
+    return filtered;
+  }
+  if(state.tab === "phrases") return items.phrases;
+  if(state.tab === "grammar") return items.grammar;
+  return [];
+}
+function computeProgress(lang){
+  const items = allItemsForLang(lang);
+  const total = items.vocabulary.length + items.phrases.length + items.grammar.length;
+  ensureLang(lang);
+  const knownMap = progress.langs[lang].known;
+  const known = Object.keys(knownMap).filter(k=>knownMap[k]).length;
+  return { known, total, pct: total ? Math.round((known/total)*100) : 0 };
+}
+function isKnown(id){
+  ensureLang(state.lang);
+  return !!progress.langs[state.lang].known[id];
+}
+function markKnown(id, val){
+  ensureLang(state.lang);
+  progress.langs[state.lang].known[id] = val;
+  saveProgress();
+  touchStreak();
+}
+/* Voices load asynchronously in most browsers, so cache and refresh the list */
+let cachedVoices = [];
+function refreshVoices(){
+  try{ cachedVoices = window.speechSynthesis.getVoices(); }catch(e){ cachedVoices = []; }
+}
+if('speechSynthesis' in window){
+  refreshVoices();
+  window.speechSynthesis.onvoiceschanged = refreshVoices;
+}
+
+function findVoice(langCode){
+  if(!cachedVoices.length) refreshVoices();
+  const exact = cachedVoices.find(v => v.lang.toLowerCase() === langCode.toLowerCase());
+  if(exact) return exact;
+  const base = langCode.split('-')[0].toLowerCase();
+  return cachedVoices.find(v => v.lang.toLowerCase().startsWith(base)) || null;
+}
+
+/* Returns {ok, mode, reason}. mode is "native" (spoke the actual term) or
+   "phonetic" (no native voice, so read the English phonetic guide instead) */
+function speak(term, langCode, phoneticGuide){
+  if(!('speechSynthesis' in window)) return { ok:false, reason:"unsupported" };
+
+  const nativeVoice = findVoice(langCode);
+  if(nativeVoice){
+    try{
+      const u = new SpeechSynthesisUtterance(term);
+      u.lang = langCode;
+      u.voice = nativeVoice;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+      return { ok:true, mode:"native" };
+    }catch(e){ /* fall through to phonetic fallback below */ }
+  }
+
+  // No native voice (common for Nepali, sometimes Hindi) — read the
+  // phonetic guide aloud with an English voice instead of staying silent.
+  if(phoneticGuide){
+    const englishVoice = findVoice("en-US") ||
+      cachedVoices.find(v => v.lang.toLowerCase().startsWith("en")) || null;
+    if(englishVoice){
+      try{
+        const spoken = phoneticGuide.replace(/-/g, " ").replace(/\s+/g, " ").trim();
+        const u = new SpeechSynthesisUtterance(spoken);
+        u.lang = "en-US";
+        u.voice = englishVoice;
+        u.rate = 0.85; // slightly slower so syllables are distinguishable
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(u);
+        return { ok:true, mode:"phonetic" };
+      }catch(e){ /* fall through */ }
+    }
+  }
+
+  return { ok:false, reason:"novoice" };
+}
+
+/* Cloud voice via ElevenLabs — used when the user has added their own API
+   key. The multilingual model auto-detects the language from the text, so
+   the same voice ID works for Spanish, Hindi, Nepali, Japanese, etc. */
+async function fetchCloudSpeech(text, apiKey){
+  const voiceId = "21m00Tcm4TlvDq8ikWAM"; // ElevenLabs default multilingual voice
+  const resp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    method: "POST",
+    headers: {
+      "xi-api-key": apiKey,
+      "Content-Type": "application/json",
+      "Accept": "audio/mpeg"
+    },
+    body: JSON.stringify({
+      text: text,
+      model_id: "eleven_multilingual_v2"
+    })
+  });
+  if(!resp.ok) throw new Error(`Cloud voice request failed (${resp.status})`);
+  const blob = await resp.blob();
+  return URL.createObjectURL(blob);
+}
+
+function showToast(msg){
+  const boardEl = document.querySelector(".board");
+  if(!boardEl) return;
+  const old = boardEl.querySelector(".voice-toast");
+  if(old) old.remove();
+  const t = document.createElement("div");
+  t.className = "voice-toast";
+  t.textContent = msg;
+  boardEl.appendChild(t);
+  setTimeout(()=>t.remove(), 3200);
+}
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+/* ============ QUIZ LOGIC ============ */
+function generateQuiz(lang){
+  const items = allItemsForLang(lang);
+  const pool = [...items.vocabulary, ...items.phrases];
+  const picked = shuffle(pool).slice(0, Math.min(10, pool.length));
+  const questions = picked.map(q=>{
+    const distractors = shuffle(pool.filter(p=>p.translation!==q.translation)).slice(0,3).map(p=>p.translation);
+    const options = shuffle([q.translation, ...distractors]);
+    return { term:q.term, pron:q.pron, correct:q.translation, options };
+  });
+  return { questions, index:0, score:0, answered:false, selected:null };
+}
+
+/* ============ RENDER ============ */
+function render(){
+  const app = document.getElementById("app");
+  const langData = DATA[state.lang];
+  const prog = computeProgress(state.lang);
+  ensureLang(state.lang);
+
+  app.innerHTML = `
+    <header class="app-header">
+      <div class="brand">
+        <h1>LinguaBoard</h1>
+        <span class="tagline">learn a little, every day</span>
+      </div>
+      <div class="header-right">
+        <span class="streak-badge">🔥 <b>${progress.streak.count}</b>-day streak</span>
+        <button class="btn-ghost voice-settings-btn" id="voiceSettingsBtn" type="button">🔑 Voice</button>
+        <select class="lang-select" id="langSelect" aria-label="Choose language">
+          ${Object.keys(DATA).map(k=>`<option value="${k}" ${k===state.lang?'selected':''}>${DATA[k].name}</option>`).join('')}
+        </select>
+      </div>
+    </header>
+
+    ${voiceSettingsOpen ? `
+    <div class="voice-panel">
+      <div class="voice-panel-title">Cloud voice (optional)</div>
+      <p class="voice-panel-copy">
+        Browsers often lack a real Nepali voice, and Hindi support varies by device.
+        Add your own <a href="https://elevenlabs.io" target="_blank" rel="noopener">ElevenLabs</a> API key
+        to hear genuine native-quality audio for every language here, instead of the built-in browser voice.
+      </p>
+      <div class="voice-panel-row">
+        <input type="password" id="voiceKeyInput" placeholder="Paste your ElevenLabs API key"
+               value="${getVoiceKey() ? '••••••••••••••••' : ''}" />
+        <button class="btn btn-blue" id="voiceKeySave" type="button">Save</button>
+        <button class="btn btn-ghost" id="voiceKeyClear" type="button">Clear</button>
+      </div>
+      <p class="voice-panel-warn">
+        ⚠️ This key is stored only in this browser's local storage and sent directly to ElevenLabs when you tap 🔊.
+        It is <b>not</b> sent anywhere else. If you share this HTML file with someone else, remove your key first —
+        anyone with a copy of the file's local storage on their own machine would need to add their own key anyway,
+        but never paste a key into a copy of this file you plan to publish or share as source code.
+      </p>
+    </div>` : ``}
+
+    <div class="board-frame">
+      <div class="board">
+        <div class="tabs" role="tablist">
+          ${["vocabulary","phrases","grammar","quiz"].map(t=>`
+            <button class="tab-btn ${state.tab===t?'active':''}" data-tab="${t}" role="tab" aria-selected="${state.tab===t}">
+              ${t.charAt(0).toUpperCase()+t.slice(1)}
+            </button>`).join('')}
+        </div>
+
+        <div id="tabContent"></div>
+
+        ${state.tab !== 'quiz' ? `
+        <div class="progress-wrap">
+          <div class="progress-label">
+            <span>${langData.name} progress</span>
+            <span>${prog.known} / ${prog.total} learned (${prog.pct}%)</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" style="width:${prog.pct}%;"></div>
+          </div>
+        </div>` : ``}
+      </div>
+    </div>
+  `;
+
+  document.getElementById("langSelect").addEventListener("change", e=>{
+    state.lang = e.target.value;
+    state.cardIndex = 0;
+    state.flipped = false;
+    state.catFilter = "All";
+    state.quiz = null;
+    render();
+  });
+
+  document.getElementById("voiceSettingsBtn").addEventListener("click", ()=>{
+    voiceSettingsOpen = !voiceSettingsOpen;
+    render();
+  });
+
+  if(voiceSettingsOpen){
+    document.getElementById("voiceKeySave").addEventListener("click", ()=>{
+      const input = document.getElementById("voiceKeyInput");
+      const val = input.value.trim();
+      if(val && val !== "••••••••••••••••"){
+        saveVoiceKey(val);
+        showToast("Voice key saved — tap 🔊 on any card to try it.");
+      }
+      render();
+    });
+    document.getElementById("voiceKeyClear").addEventListener("click", ()=>{
+      clearVoiceKey();
+      showToast("Voice key removed. Falling back to the built-in browser voice.");
+      render();
+    });
+  }
+
+  document.querySelectorAll(".tab-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      state.tab = btn.dataset.tab;
+      state.cardIndex = 0;
+      state.flipped = false;
+      state.catFilter = "All";
+      if(state.tab === "quiz") state.quiz = generateQuiz(state.lang);
+      render();
+    });
+  });
+
+  renderTabContent();
+}
+
+function renderTabContent(){
+  const container = document.getElementById("tabContent");
+  if(state.tab === "quiz"){
+    renderQuiz(container);
+  } else {
+    renderFlashcards(container);
+  }
+}
+
+function renderFlashcards(container){
+  const deck = currentDeck();
+
+  let chipsHtml = "";
+  if(state.tab === "vocabulary"){
+    const cats = ["All", ...new Set(DATA[state.lang].vocabulary.map(v=>v.cat))];
+    chipsHtml = `<div class="chip-row">${cats.map(c=>`
+      <button class="chip ${state.catFilter===c?'active':''}" data-cat="${c}">${c}</button>
+    `).join('')}</div>`;
+  }
+
+  if(deck.length === 0){
+    container.innerHTML = chipsHtml + `<div class="empty-state">No cards in this category yet.</div>`;
+    bindChips(container);
+    return;
+  }
+
+  if(state.cardIndex >= deck.length) state.cardIndex = 0;
+  const item = deck[state.cardIndex];
+  const isGrammar = state.tab === "grammar";
+  const known = isKnown(item.id);
+
+  container.innerHTML = chipsHtml + `
+    <div class="card-stage">
+      <div class="card-counter">Card ${state.cardIndex+1} of ${deck.length} ${known ? '· ✓ learned' : ''}</div>
+
+      <div class="flashcard ${state.flipped?'flipped':''}" id="flashcard" tabindex="0" role="button"
+           aria-label="Flashcard, press enter or space to flip">
+        <div class="flashcard-inner">
+          <div class="flashcard-face front">
+            <span class="face-label">${isGrammar ? 'grammar point' : 'front'}</span>
+            ${isGrammar ? `
+              <div class="term" style="font-size:2rem;">${item.title}</div>
+              <div class="hint">tap to see the explanation</div>
+            ` : `
+              <div class="term">${item.term}</div>
+              <div class="pronunciation">${item.pron}</div>
+              ${!isGrammar ? `<button class="speaker-btn" id="speakBtn" aria-label="Hear pronunciation">🔊</button>` : ``}
+              <div class="hint">tap to flip</div>
+            `}
+          </div>
+          <div class="flashcard-face back">
+            <span class="face-label">${isGrammar ? 'explanation' : 'translation'}</span>
+            ${isGrammar ? `
+              <div class="translation" style="font-size:1.5rem;">${item.explanation}</div>
+              <div class="example">${item.example}</div>
+            ` : `
+              <div class="translation">${item.translation}</div>
+              <div class="hint">tap to flip back</div>
+            `}
+          </div>
+        </div>
+      </div>
+
+      <div class="card-controls">
+        <button class="btn btn-ghost" id="prevBtn" ${state.cardIndex===0?'disabled':''}>&larr; Prev</button>
+        <button class="btn btn-coral" id="stillBtn">Still learning</button>
+        <button class="btn btn-green" id="knowBtn">Got it! ✓</button>
+        <button class="btn btn-ghost" id="nextBtn" ${state.cardIndex===deck.length-1?'disabled':''}>Next &rarr;</button>
+      </div>
+    </div>
+  `;
+
+  bindChips(container);
+
+  const flashcardEl = document.getElementById("flashcard");
+  const flipCard = ()=>{ state.flipped = !state.flipped; render(); };
+  flashcardEl.addEventListener("click", flipCard);
+  flashcardEl.addEventListener("keydown", e=>{
+    if(e.key === " " || e.key === "Enter"){ e.preventDefault(); flipCard(); }
+  });
+
+  const speakBtn = document.getElementById("speakBtn");
+  if(speakBtn){
+    speakBtn.addEventListener("click", async e=>{
+      e.stopPropagation();
+      const apiKey = getVoiceKey();
+
+      if(apiKey){
+        speakBtn.disabled = true;
+        speakBtn.textContent = "⏳";
+        try{
+          const url = await fetchCloudSpeech(item.term, apiKey);
+          const audio = new Audio(url);
+          await audio.play();
+          speakBtn.disabled = false;
+          speakBtn.textContent = "🔊";
+          return;
+        }catch(err){
+          console.error("Cloud voice failed, falling back", err);
+          showToast("Cloud voice failed — using the built-in browser voice instead.");
+          speakBtn.disabled = false;
+          speakBtn.textContent = "🔊";
+          // fall through to native/phonetic fallback below
+        }
+      }
+
+      const result = speak(item.term, DATA[state.lang].speechLang, item.pron);
+      if(result.ok && result.mode === "phonetic"){
+        showToast(`No ${DATA[state.lang].name} voice on this device — playing the phonetic pronunciation instead.`);
+      } else if(!result.ok){
+        const msg = result.reason === "unsupported"
+          ? "Text-to-speech isn't available in this browser."
+          : "No voice available to read this card.";
+        showToast(msg);
+      }
+    });
+  }
+
+  document.getElementById("prevBtn").addEventListener("click", ()=>{
+    state.cardIndex = Math.max(0, state.cardIndex-1);
+    state.flipped = false;
+    render();
+  });
+  document.getElementById("nextBtn").addEventListener("click", ()=>{
+    state.cardIndex = Math.min(deck.length-1, state.cardIndex+1);
+    state.flipped = false;
+    render();
+  });
+  document.getElementById("stillBtn").addEventListener("click", ()=>{
+    markKnown(item.id, false);
+    advanceCard(deck);
+  });
+  document.getElementById("knowBtn").addEventListener("click", (e)=>{
+    markKnown(item.id, true);
+    burstDust(e.currentTarget);
+    advanceCard(deck);
+  });
+}
+
+function advanceCard(deck){
+  if(state.cardIndex < deck.length-1){
+    state.cardIndex += 1;
+    state.flipped = false;
+    render();
+  } else {
+    render(); // stay on last card, refresh progress bar / known state
+  }
+}
+
+function bindChips(container){
+  container.querySelectorAll(".chip").forEach(chip=>{
+    chip.addEventListener("click", ()=>{
+      state.catFilter = chip.dataset.cat;
+      state.cardIndex = 0;
+      state.flipped = false;
+      render();
+    });
+  });
+}
+
+function burstDust(anchorEl){
+  const rect = anchorEl.getBoundingClientRect();
+  const boardEl = document.querySelector(".board");
+  const boardRect = boardEl.getBoundingClientRect();
+  for(let i=0;i<10;i++){
+    const p = document.createElement("span");
+    p.className = "dust-particle";
+    const x = rect.left - boardRect.left + rect.width/2;
+    const y = rect.top - boardRect.top + rect.height/2;
+    p.style.left = x + "px";
+    p.style.top = y + "px";
+    const dx = (Math.random()-0.5)*120;
+    const dy = -Math.random()*80 - 20;
+    p.style.setProperty("--dx", dx+"px");
+    p.style.setProperty("--dy", dy+"px");
+    boardEl.appendChild(p);
+    setTimeout(()=>p.remove(), 750);
+  }
+}
+
+/* ---------- Quiz rendering ---------- */
+function renderQuiz(container){
+  if(!state.quiz) state.quiz = generateQuiz(state.lang);
+  const q = state.quiz;
+
+  if(q.questions.length === 0){
+    container.innerHTML = `<div class="empty-state">Not enough content to build a quiz for this language yet.</div>`;
+    return;
+  }
+
+  if(q.index >= q.questions.length){
+    ensureLang(state.lang);
+    const langProg = progress.langs[state.lang];
+    container.innerHTML = `
+      <div class="results-wrap">
+        <div class="results-score">${q.score} / ${q.questions.length}</div>
+        <div class="results-sub">Best score so far: ${langProg.bestScore} / ${q.questions.length}</div>
+        <div class="results-actions">
+          <button class="btn btn-blue" id="retryBtn">Try again</button>
+          <button class="btn btn-ghost" id="backBtn">Back to lessons</button>
+        </div>
+      </div>
+    `;
+    if(q.score > langProg.bestScore){ langProg.bestScore = q.score; saveProgress(); }
+    langProg.quizHistory.push({date:new Date().toISOString().slice(0,10), score:q.score, total:q.questions.length});
+    saveProgress();
+    touchStreak();
+
+    document.getElementById("retryBtn").addEventListener("click", ()=>{
+      state.quiz = generateQuiz(state.lang);
+      render();
+    });
+    document.getElementById("backBtn").addEventListener("click", ()=>{
+      state.tab = "vocabulary";
+      state.quiz = null;
+      render();
+    });
+    return;
+  }
+
+  const current = q.questions[q.index];
+  container.innerHTML = `
+    <div class="quiz-sub">Question ${q.index+1} of ${q.questions.length} · Score: ${q.score}</div>
+    <div class="quiz-question">${current.term}</div>
+    <div class="quiz-sub">${current.pron}</div>
+    <div class="quiz-options">
+      ${current.options.map((opt,i)=>`
+        <button class="quiz-option" data-opt="${i}">${opt}</button>
+      `).join('')}
+    </div>
+    <div class="quiz-footer">
+      <button class="btn btn-blue" id="nextQBtn" style="display:none;">Next question &rarr;</button>
+    </div>
+  `;
+
+  container.querySelectorAll(".quiz-option").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      if(q.answered) return;
+      q.answered = true;
+      const chosen = btn.textContent;
+      const isCorrect = chosen === current.correct;
+      if(isCorrect) q.score += 1;
+      container.querySelectorAll(".quiz-option").forEach(b=>{
+        b.disabled = true;
+        if(b.textContent === current.correct) b.classList.add("correct");
+        else if(b === btn && !isCorrect) b.classList.add("wrong");
+      });
+      document.getElementById("nextQBtn").style.display = "inline-block";
+    });
+  });
+
+  document.getElementById("nextQBtn").addEventListener("click", ()=>{
+    q.index += 1;
+    q.answered = false;
+    render();
+  });
+}
+
+/* ============ INIT ============ */
+render();
+
+/* Register service worker for offline support + installability.
+   Wrapped in a feature check so it never breaks the app in browsers
+   or contexts (like some sandboxed viewers) that block it. */
+if("serviceWorker" in navigator){
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js").catch(err => {
+      console.warn("Service worker registration failed:", err);
+    });
+  });
+}
+</script>
+</body>
+</html>
